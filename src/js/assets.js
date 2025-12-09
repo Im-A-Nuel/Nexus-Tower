@@ -59,7 +59,8 @@ export class AssetLoader {
             environment: {
                 tileset: 'assets/sprites/environment/FieldsTileset.png',
                 ground: 'assets/sprites/environment/spr_tile_set_ground.png',
-                stone: 'assets/sprites/environment/spr_tile_set_stone.png'
+                stone: 'assets/sprites/environment/spr_tile_set_stone.png',
+                background: 'assets/background1.png' // new desert path backdrop
             }
         };
     }

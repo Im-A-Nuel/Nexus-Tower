@@ -40,16 +40,16 @@ export class NPC {
         this.maxHp = baseHp;
 
         // Combat
-        const baseDamage = 11;
+        const baseDamage = 8;
         this.damage = baseDamage;
-        this.range = 260; // Attack range
-        this.fireRate = 0.65; // seconds between shots
+        this.range = 200; // Attack range
+        this.fireRate = 0.95; // seconds between shots (slightly faster)
         this.fireCooldown = 0;
 
         // FSM Parameters
-        this.senseRadius = 200; // Detection radius for player
-        this.leashRadius = 280; // Max distance from base before returning
-        this.stopDistance = 120; // Stop this far from target to shoot
+        this.senseRadius = 170; // Detection radius for player
+        this.leashRadius = 230; // Max distance from base before returning
+        this.stopDistance = 150; // Stop this far from target to shoot
 
         // Visual - Random sprite based on level
         this.sprite = this.chooseSprite(level);
@@ -57,6 +57,8 @@ export class NPC {
 
         // State
         this.alive = true;
+        this.animationTime = 0;
+        this.hitFlashTimer = 0;
     }
 
     chooseSprite(level) {
@@ -77,6 +79,10 @@ export class NPC {
 
     update(dt, player, nexus) {
         if (!this.alive) return;
+
+        // Advance animation timer
+        this.animationTime += dt;
+        this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dt);
 
         // Update cooldowns
         this.fireCooldown = Math.max(0, this.fireCooldown - dt);
@@ -240,6 +246,7 @@ export class NPC {
         if (!this.alive) return;
 
         this.hp -= amount;
+        this.hitFlashTimer = 0.18;
         if (this.hp <= 0) {
             this.hp = 0;
             this.alive = false;

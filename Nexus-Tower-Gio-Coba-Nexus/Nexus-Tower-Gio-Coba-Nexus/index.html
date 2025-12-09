@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus Tower Defender</title>
+    <link rel="stylesheet" href="src/css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="screen-content">
+                <h1 class="game-title">Nexus Tower Defender</h1>
+                <div class="loading-container">
+                    <div class="loading-label">Loading Assets...</div>
+                    <div class="loading-bar-wrapper">
+                        <div class="loading-bar">
+                            <div id="loading-bar-fill" class="loading-bar-fill"></div>
+                        </div>
+                    </div>
+                    <div id="loading-percent" class="loading-percent">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Menu Screen -->
+        <div id="menu-screen" class="screen">
+            <div class="screen-content">
+                <h1 class="game-title">Nexus Tower Defender</h1>
+                <p class="game-subtitle">Defend your Nexus, Destroy Enemy Bases</p>
+
+                <div class="menu-options">
+                    <button id="btn-start" class="btn btn-primary">Start Game</button>
+
+                    <div class="difficulty-selector">
+                        <label for="difficulty">Difficulty:</label>
+                        <select id="difficulty" class="select">
+                            <option value="easy">Easy</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="hard">Hard</option>
+                            <option value="insane">Insane</option>
+                        </select>
+                    </div>
+
+                    <button id="btn-controls" class="btn btn-secondary">View Controls</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Screen -->
+        <div id="controls-screen" class="screen">
+            <div class="screen-content">
+                <h2>Controls</h2>
+                <div class="controls-grid">
+                    <div class="control-item">
+                        <kbd>W A S D</kbd>
+                        <span>Move Player</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>SPACE</kbd>
+                        <span>Shoot (towards cursor)</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>F</kbd>
+                        <span>Dash</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>ESC</kbd>
+                        <span>Pause Game</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>G</kbd>
+                        <span>Toggle Grid (Debug)</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>A</kbd>
+                        <span>Toggle Aggro Radius (Debug)</span>
+                    </div>
+                </div>
+                <button id="btn-back-controls" class="btn btn-secondary">Back to Menu</button>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen">
+            <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+            <!-- HUD Overlay -->
+            <div id="hud" class="hud">
+                <div class="hud-top">
+                    <div class="hud-item">
+                        <span class="hud-label">Level</span>
+                        <span id="hud-level" class="hud-value">1</span>
+                    </div>
+                    <div class="hud-item">
+                        <span class="hud-label">Enemy Bases</span>
+                        <span id="hud-bases" class="hud-value">0</span>
+                    </div>
+                </div>
+
+                <div class="hud-bottom">
+                    <div class="health-container">
+                        <div class="health-label">Player HP</div>
+                        <div class="health-bar-wrapper">
+                            <div class="health-bar">
+                                <div id="player-health-fill" class="health-fill player"></div>
+                            </div>
+                            <span id="player-health-text" class="health-text">100 / 100</span>
+                        </div>
+                    </div>
+
+                    <div class="health-container">
+                        <div class="health-label">Nexus HP</div>
+                        <div class="health-bar-wrapper">
+                            <div class="health-bar">
+                                <div id="nexus-health-fill" class="health-fill nexus"></div>
+                            </div>
+                            <span id="nexus-health-text" class="health-text">200 / 200</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pause-screen" class="screen overlay">
+            <div class="screen-content">
+                <h2>Game Paused</h2>
+                <div class="menu-options">
+                    <button id="btn-resume" class="btn btn-primary">Resume</button>
+                    <button id="btn-restart" class="btn btn-secondary">Restart Level</button>
+                    <button id="btn-main-menu" class="btn btn-secondary">Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Up Screen -->
+        <div id="levelup-screen" class="screen overlay">
+            <div class="screen-content">
+                <h2>Level Complete!</h2>
+                <div class="level-stats">
+                    <p class="level-complete-text">Level <span id="completed-level">1</span> Cleared!</p>
+                    <ul class="stats-list">
+                        <li>✓ HP Partially Restored</li>
+                        <li>✓ Max HP Increased</li>
+                        <li>✓ Difficulty Increased</li>
+                    </ul>
+                </div>
+                <button id="btn-continue" class="btn btn-primary">Continue</button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen overlay">
+            <div class="screen-content">
+                <h2 class="gameover-title">Game Over</h2>
+                <div class="gameover-stats">
+                    <p class="reached-level">You reached <strong>Level <span id="final-level">1</span></strong></p>
+                    <p id="death-reason" class="death-reason">Your Nexus was destroyed!</p>
+                </div>
+                <div class="menu-options">
+                    <button id="btn-retry" class="btn btn-primary">Try Again</button>
+                    <button id="btn-gameover-menu" class="btn btn-secondary">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Game Scripts (ES6 Modules) -->
+    <script type="module" src="src/js/main.js"></script>
+</body>
+</html>

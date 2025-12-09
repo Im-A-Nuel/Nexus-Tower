@@ -53,6 +53,7 @@ export class CollisionHandler {
                         npc.x, npc.y, npc.radius
                     )) {
                         npc.takeDamage(proj.damage);
+                        npc.hitFlashTimer = 0.18;
                         this.spawnParticles(npc.x, npc.y, '#fbbf24');
                         proj.destroy();
                         hitNPC = true;
@@ -72,6 +73,7 @@ export class CollisionHandler {
                         base.x, base.y, base.width, base.height
                     )) {
                         base.takeDamage(proj.damage);
+                        base.hitFlashTimer = 0.2;
                         this.spawnParticles(proj.x, proj.y, '#5eead4');
                         proj.destroy();
                         break;

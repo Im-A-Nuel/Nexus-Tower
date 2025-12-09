@@ -3,7 +3,7 @@
  * Represents player Nexus and enemy bases
  */
 
-import { TEAMS } from './utils.js';
+import { TEAMS, distance } from './utils.js';
 
 export class Base {
     constructor(x, y, width, height, team) {
@@ -28,9 +28,18 @@ export class Base {
 
         // State
         this.destroyed = false;
+        this.hitFlashTimer = 0;
+
+        // Animation timer (used by renderer to advance sprite frames)
+        this.animationTime = 0;
     }
 
     update(dt) {
+        if (typeof dt === 'number') {
+            this.animationTime += dt;
+            this.hitFlashTimer = Math.max(0, this.hitFlashTimer - dt);
+        }
+
         // Update destroyed state
         if (this.hp <= 0 && !this.destroyed) {
             this.destroyed = true;
@@ -44,6 +53,7 @@ export class Base {
         if (this.destroyed) return;
 
         this.hp -= amount;
+        this.hitFlashTimer = 0.2;
         if (this.hp <= 0) {
             this.hp = 0;
             this.destroyed = true;
@@ -98,6 +108,13 @@ export class Nexus extends Base {
         this.hp = 200;
         this.maxHp = 200;
         this.sprite = 'castle_green';
+
+        // Turret stats (player base can attack)
+        this.damage = 20;
+        this.attackRange = 260;
+        this.fireRate = 1.2;
+        this.fireCooldown = 0;
+        this.projectileSpeed = 480;
     }
 
     /**
@@ -109,6 +126,11 @@ export class Nexus extends Base {
 
         // Restore some HP
         this.hp = Math.min(this.maxHp, this.hp + Math.floor(this.maxHp * 0.5));
+    }
+
+    update(dt) {
+        super.update(dt);
+        this.fireCooldown = Math.max(0, this.fireCooldown - dt);
     }
 }
 
@@ -124,29 +146,58 @@ export class EnemyBase extends Base {
         this.sprite = 'castle_red';
 
         // Raider spawn
-        this.raidersToSpawn = 0;
-        this.raiderSpawnTimer = 0;
-        this.raiderSpawnInterval = 1.5;
+        this.raidersToSpawn = 1;          // One raider ready at game start
+        this.raiderSpawnTimer = 0.5;      // Spawn very soon after level start
+        this.raiderSpawnInterval = 2.5;
+        this.raiderAggroActive = true;    // Active from the beginning
+        this.raiderAutoInterval = 6.5;    // Continuous raid cycle (slower)
+        this.raiderAutoTimer = 5.0;
+
+        // Turret combat (lets towers shoot back)
+        const baseDamage = 10 + Math.floor((level - 1) * 1.2);
+        this.damage = baseDamage;
+        this.attackRange = 280;
+        this.fireRate = 1.1; // Slightly faster turret fire
+        this.fireCooldown = 0;
+        this.projectileSpeed = 380;
     }
 
+    /**
+     * Update base timers; returns true if a raider is ready to spawn
+     */
     update(dt) {
         super.update(dt);
 
-        // Update raider spawn timer
+        this.fireCooldown = Math.max(0, this.fireCooldown - dt);
+
+        if (this.raiderAggroActive) {
+            this.raiderAutoTimer -= dt;
+            if (this.raiderAutoTimer <= 0) {
+                this.raiderAutoTimer = this.raiderAutoInterval;
+                this.queueRaiders(1);
+            }
+        }
+
+        let spawnReady = false;
         if (this.raidersToSpawn > 0) {
             this.raiderSpawnTimer -= dt;
             if (this.raiderSpawnTimer <= 0) {
                 this.raiderSpawnTimer = this.raiderSpawnInterval;
-                // Signal to spawn raider (handled by game logic)
+                if (this.raidersToSpawn > 0) {
+                    this.raidersToSpawn--;
+                    spawnReady = true;
+                }
             }
         }
+
+        return spawnReady;
     }
 
     /**
      * Queue raider spawns
      */
     queueRaiders(count) {
-        this.raidersToSpawn = Math.max(this.raidersToSpawn, count);
+        this.raidersToSpawn += count;
     }
 
     /**
@@ -158,5 +209,36 @@ export class EnemyBase extends Base {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Get spawn point in front of base
+     */
+    getSpawnPoint() {
+        return {
+            x: this.x - this.width / 2 - 10,
+            y: this.y
+        };
+    }
+
+    /**
+     * Check if a target position is within turret range
+     */
+    isTargetInRange(targetX, targetY) {
+        return distance(this.x, this.y, targetX, targetY) <= this.attackRange;
+    }
+
+    /**
+     * Check if the base can fire this frame
+     */
+    canShootAt(targetX, targetY) {
+        return !this.destroyed && this.fireCooldown <= 0 && this.isTargetInRange(targetX, targetY);
+    }
+
+    /**
+     * Reset turret cooldown after shooting
+     */
+    resetFireCooldown() {
+        this.fireCooldown = this.fireRate;
     }
 }

@@ -6,6 +6,13 @@
 import { TEAM_COLORS } from './utils.js';
 import { drawSpriteFrame, SPRITE_CONFIGS, getSpriteConfig } from './sprite-animator.js';
 
+function getFrameIndexFromTime(animationTime, config) {
+    if (!config || !config.frames) return 0;
+    const frameDuration = config.frameRate || 0.12;
+    const time = animationTime || 0;
+    return Math.floor(time / frameDuration) % config.frames;
+}
+
 export class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
@@ -33,19 +40,24 @@ export class Renderer {
     }
 
     drawBackground() {
-        // Gradient background with depth
-        const gradient = this.ctx.createRadialGradient(
-            this.width / 2, this.height / 2, 0,
-            this.width / 2, this.height / 2, this.width
-        );
-        gradient.addColorStop(0, '#0f1420');
-        gradient.addColorStop(0.5, '#0a0e1a');
-        gradient.addColorStop(1, '#050810');
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.width, this.height);
+        // Full background image if available
+        if (this.sprites.background) {
+            this.ctx.drawImage(this.sprites.background, 0, 0, this.width, this.height);
+        } else {
+            // Gradient background with depth
+            const gradient = this.ctx.createRadialGradient(
+                this.width / 2, this.height / 2, 0,
+                this.width / 2, this.height / 2, this.width
+            );
+            gradient.addColorStop(0, '#0f1420');
+            gradient.addColorStop(0.5, '#0a0e1a');
+            gradient.addColorStop(1, '#050810');
+            this.ctx.fillStyle = gradient;
+            this.ctx.fillRect(0, 0, this.width, this.height);
+        }
 
-        // Draw tileset if loaded with slight transparency
-        if (this.sprites.tileset) {
+        // Draw tileset only if no full background
+        if (!this.sprites.background && this.sprites.tileset) {
             this.ctx.globalAlpha = 0.85;
             this.ctx.drawImage(this.sprites.tileset, 0, 0, this.width, this.height);
             this.ctx.globalAlpha = 1;
@@ -53,7 +65,7 @@ export class Renderer {
             // Add subtle overlay for depth
             this.ctx.fillStyle = 'rgba(10, 14, 26, 0.15)';
             this.ctx.fillRect(0, 0, this.width, this.height);
-        } else {
+        } else if (!this.sprites.background) {
             // Fallback: Draw subtle texture pattern
             this.ctx.globalAlpha = 0.03;
             this.ctx.fillStyle = '#ffffff';
@@ -67,15 +79,31 @@ export class Renderer {
             this.ctx.globalAlpha = 1;
         }
 
-        // Vignette effect
+        // Vignette effect (lightened when background image exists)
         const vignette = this.ctx.createRadialGradient(
             this.width / 2, this.height / 2, this.width * 0.3,
             this.width / 2, this.height / 2, this.width * 0.8
         );
+        const edgeAlpha = this.sprites.background ? 0.25 : 0.4;
         vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        vignette.addColorStop(1, 'rgba(0, 0, 0, 0.4)');
+        vignette.addColorStop(1, `rgba(0, 0, 0, ${edgeAlpha})`);
         this.ctx.fillStyle = vignette;
         this.ctx.fillRect(0, 0, this.width, this.height);
+
+        // Cover bottom-right corner with an object to hide UI artifact
+        const coverSize = 140;
+        const coverX = this.width - coverSize - 20;
+        const coverY = this.height - coverSize - 10;
+        this.ctx.save();
+        if (this.sprites.stone) {
+            this.ctx.drawImage(this.sprites.stone, coverX, coverY, coverSize, coverSize);
+        } else {
+            this.ctx.fillStyle = '#2b2b2b';
+            this.ctx.beginPath();
+            this.ctx.ellipse(coverX + coverSize / 2, coverY + coverSize / 2, coverSize * 0.45, coverSize * 0.35, 0, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        this.ctx.restore();
     }
 
     drawGrid() {
@@ -106,6 +134,17 @@ export class Renderer {
 
     // ===== Entity Rendering =====
 
+    drawRangeRing(radius, color, thickness = 1.5) {
+        if (!radius) return;
+        this.ctx.save();
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = thickness;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        this.ctx.stroke();
+        this.ctx.restore();
+    }
+
     drawPlayer(player, mouseX, mouseY) {
         this.ctx.save();
         this.ctx.translate(player.x, player.y);
@@ -115,16 +154,6 @@ export class Renderer {
         this.ctx.beginPath();
         this.ctx.ellipse(0, player.radius + 2, player.radius * 0.8, player.radius * 0.3, 0, 0, Math.PI * 2);
         this.ctx.fill();
-
-        // Aim line (subtle)
-        this.ctx.strokeStyle = 'rgba(34, 211, 238, 0.15)';
-        this.ctx.lineWidth = 1.5;
-        this.ctx.setLineDash([4, 4]);
-        this.ctx.beginPath();
-        this.ctx.moveTo(0, 0);
-        this.ctx.lineTo(mouseX - player.x, mouseY - player.y);
-        this.ctx.stroke();
-        this.ctx.setLineDash([]);
 
         // Player sprite (jika loaded)
         if (player.sprite && this.sprites[player.sprite]) {
@@ -218,7 +247,7 @@ export class Renderer {
 
             // Get castle sprite config and animate
             const config = SPRITE_CONFIGS.CASTLE;
-            const frameIndex = Math.floor(Date.now() / 200) % config.frames; // Slow animation
+            const frameIndex = 0; // Keep player turret static
 
             // Draw single frame from sprite sheet
             drawSpriteFrame(
@@ -287,6 +316,9 @@ export class Renderer {
         this.ctx.save();
         this.ctx.translate(base.x, base.y);
 
+        // Turret range indicator
+        this.drawRangeRing(base.attackRange, 'rgba(255, 255, 255, 0.25)', 1.5);
+
         // Aggro radius (disabled for cleaner look)
         // if (this.showAggroRadius) {
         //     const color = TEAM_COLORS[base.team];
@@ -316,7 +348,7 @@ export class Renderer {
 
             // Get castle sprite config and animate
             const config = SPRITE_CONFIGS.CASTLE;
-            const frameIndex = Math.floor(Date.now() / 200) % config.frames; // Slow animation
+            const frameIndex = 0; // Keep turret base static
 
             // Draw single frame from sprite sheet
             drawSpriteFrame(
@@ -354,6 +386,17 @@ export class Renderer {
         const baseDisplaySize = base.sprite && this.sprites[base.sprite] ? base.width * 1.3 : base.width;
         this.drawHealthBar(0, -baseDisplaySize / 2 - 14, baseDisplaySize * 0.75, 6, base.hp, base.maxHp, '#ef4444');
 
+        // Hit glow
+        if (base.hitFlashTimer > 0) {
+            const intensity = Math.min(0.7, base.hitFlashTimer * 3);
+            this.ctx.globalAlpha = intensity;
+            this.ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, baseDisplaySize * 0.55, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.globalAlpha = 1;
+        }
+
         this.ctx.restore();
     }
 
@@ -380,7 +423,7 @@ export class Renderer {
             // Get sprite config and animate
             const config = getSpriteConfig(npc.sprite);
             if (config) {
-                const frameIndex = Math.floor(Date.now() / 120) % config.frames;
+                const frameIndex = 0; // Keep minion sprite static
 
                 // Draw single frame from sprite sheet
                 drawSpriteFrame(
@@ -441,11 +484,36 @@ export class Renderer {
             this.drawHealthBar(0, -spriteSize / 2 - 10, 36, 4, npc.hp, npc.maxHp, TEAM_COLORS[npc.team]);
         }
 
+        // Hit glow
+        if (npc.hitFlashTimer > 0) {
+            const intensity = Math.min(0.7, npc.hitFlashTimer * 3);
+            this.ctx.globalAlpha = intensity;
+            this.ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, npc.radius * 1.5, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.globalAlpha = 1;
+        }
+
         this.ctx.restore();
     }
 
     drawProjectile(projectile) {
         this.ctx.save();
+
+        // Tinted straight line along projectile direction
+        const isPlayer = projectile.owner === 'player';
+        const lineColor = isPlayer ? 'rgba(251, 191, 36, 0.45)' : 'rgba(249, 115, 22, 0.45)';
+        const lineLength = projectile.radius * 6;
+        this.ctx.strokeStyle = lineColor;
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(projectile.x, projectile.y);
+        this.ctx.lineTo(
+            projectile.x - Math.cos(projectile.angle) * lineLength,
+            projectile.y - Math.sin(projectile.angle) * lineLength
+        );
+        this.ctx.stroke();
 
         // Projectile sprite
         if (projectile.sprite && this.sprites[projectile.sprite]) {
@@ -496,6 +564,42 @@ export class Renderer {
             this.ctx.arc(projectile.x, projectile.y, projectile.radius * 0.5, 0, Math.PI * 2);
             this.ctx.fill();
         }
+
+        this.ctx.restore();
+    }
+
+    drawCrosshair(x, y, player) {
+        if (!player) return;
+        const showCrosshair = player.weaponType === 'rifle' || player.weaponType === 'sniper';
+        if (!showCrosshair) return;
+
+        this.ctx.save();
+        this.ctx.translate(x, y);
+
+        const size = 16;
+        this.ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(-size, 0);
+        this.ctx.lineTo(-size / 2, 0);
+        this.ctx.moveTo(size, 0);
+        this.ctx.lineTo(size / 2, 0);
+        this.ctx.moveTo(0, -size);
+        this.ctx.lineTo(0, -size / 2);
+        this.ctx.moveTo(0, size);
+        this.ctx.lineTo(0, size / 2);
+        this.ctx.stroke();
+
+        // Inner ring
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, size / 2.5, 0, Math.PI * 2);
+        this.ctx.stroke();
+
+        // Center dot
+        this.ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+        this.ctx.fill();
 
         this.ctx.restore();
     }
@@ -627,7 +731,8 @@ export class Renderer {
             // Environment
             tileset: assets.environment?.tileset,
             ground: assets.environment?.ground,
-            stone: assets.environment?.stone
+            stone: assets.environment?.stone,
+            background: assets.environment?.background
         };
 
         console.log('✅ Renderer assets loaded:', this.sprites);

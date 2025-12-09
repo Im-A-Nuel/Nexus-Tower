@@ -11,7 +11,8 @@ import { CollisionHandler } from './collision.js';
 import { Renderer } from './render.js';
 import { InputManager } from './input.js';
 import { AssetLoader } from './assets.js';
-import { GAME_STATES, getElement, showElement } from './utils.js';
+import { NPC, STATES } from './npc.js';
+import { GAME_STATES, getElement, showElement, distance } from './utils.js';
 
 export class Game {
     constructor(canvas) {
@@ -30,6 +31,9 @@ export class Game {
         this.state = GAME_STATES.LOADING;
         this.level = 1;
         this.difficulty = 'normal';
+        this.weaponChoice = 'rifle';
+        this.savedProgress = null;
+        this.highestLevels = {};
 
         // Entities
         this.player = null;
@@ -74,6 +78,7 @@ export class Game {
         // Setup
         this.setupEventListeners();
         this.setupParticleCallback();
+        this.loadPersistedData();
         this.startAssetLoading();
     }
 
@@ -89,6 +94,14 @@ export class Game {
         getElement('difficulty').addEventListener('change', (e) => {
             this.difficulty = e.target.value;
         });
+
+        // Weapon selector
+        const weaponSelect = getElement('weapon');
+        if (weaponSelect) {
+            weaponSelect.addEventListener('change', (e) => {
+                this.weaponChoice = e.target.value;
+            });
+        }
 
         // Pause buttons
         getElement('btn-resume').addEventListener('click', () => this.resumeGame());
@@ -144,16 +157,26 @@ export class Game {
 
     startGame() {
         this.levelGenerator.setDifficulty(this.difficulty);
-        this.level = 1;
+        // Resume saved progress if available
+        if (this.savedProgress) {
+            this.difficulty = this.savedProgress.difficulty || this.difficulty;
+            this.levelGenerator.setDifficulty(this.difficulty);
+            this.level = this.savedProgress.level || 1;
+        } else {
+            this.level = 1;
+        }
         this.initializeEntities();
         this.loadLevel(this.level);
         this.setState(GAME_STATES.PLAYING);
         this.start();
+        this.saveProgress();
+        this.renderProgressInfo();
     }
 
     initializeEntities() {
         // Create player
         this.player = new Player(160, this.height / 2);
+        this.player.applyWeaponStats(this.weaponChoice || 'rifle');
 
         // Create nexus
         this.nexus = new Nexus(100, this.height / 2);
@@ -180,6 +203,8 @@ export class Game {
         // Reset player position
         this.player.x = 160;
         this.player.y = this.height / 2;
+        this.player.hp = this.player.maxHp;
+        this.player.alive = true;
 
         // Update HUD
         this.updateHUD();
@@ -193,13 +218,19 @@ export class Game {
         // Load next level
         this.level++;
         this.loadLevel(this.level);
-
         this.setState(GAME_STATES.PLAYING);
+        this.saveProgress();
+        this.updateHighestLevel();
     }
 
     restartLevel() {
         this.loadLevel(this.level);
+        // Reset player HP and cooldowns
+        this.player.reset(160, this.height / 2);
+        // Reset nexus HP
+        this.nexus.hp = this.nexus.maxHp;
         this.setState(GAME_STATES.PLAYING);
+        this.saveProgress();
     }
 
     retryGame() {
@@ -209,6 +240,7 @@ export class Game {
     backToMenu() {
         this.setState(GAME_STATES.MENU);
         this.stop();
+        this.saveProgress();
     }
 
     pauseGame() {
@@ -333,29 +365,81 @@ export class Game {
         }
 
         // Handle player shooting
+        const mouse = this.input.getMousePosition();
         if (this.input.isShootPressed() && this.player.canShoot()) {
-            const mouse = this.input.getMousePosition();
             if (this.player.shoot()) {
-                this.projectiles.push(
-                    new Projectile(
-                        this.player.x,
-                        this.player.y,
-                        mouse.x,
-                        mouse.y,
-                        this.player.damage,
-                        'player',
-                        560
-                    )
-                );
+                const speed = this.player.projectileSpeed || 560;
+                const pelletCount = this.player.pellets || 1;
+                const spread = this.player.spread || 0;
+                const baseAngle = Math.atan2(mouse.y - this.player.y, mouse.x - this.player.x);
+                const mouseDistance = distance(this.player.x, this.player.y, mouse.x, mouse.y);
+                const clampedDistance = Math.min(mouseDistance, this.player.range);
+                const lifetime = Math.max(this.player.range / speed, 0.1);
+
+                for (let i = 0; i < pelletCount; i++) {
+                    const offset = spread === 0 ? 0 : (i - (pelletCount - 1) / 2) * spread;
+                    const angle = baseAngle + offset;
+                    const targetX = this.player.x + Math.cos(angle) * this.player.range;
+                    const targetY = this.player.y + Math.sin(angle) * this.player.range;
+                    const distanceFactor = this.player.weaponType === 'sniper'
+                        ? 0.6 + Math.min(1, Math.max(0, clampedDistance / this.player.range)) * (1.6 - 0.6)
+                        : 1;
+
+                    this.projectiles.push(
+                        new Projectile(
+                            this.player.x,
+                            this.player.y,
+                            targetX,
+                            targetY,
+                            Math.round(this.player.damage * distanceFactor),
+                            'player',
+                            speed,
+                            lifetime
+                        )
+                    );
+                }
             }
         }
 
         // Update nexus
         this.nexus.update(dt);
+        this.handleNexusTurret(dt);
 
         // Update enemy bases
         for (const base of this.bases) {
-            base.update(dt);
+            const spawnReady = base.update(dt);
+
+            // Trigger raider spawn once player enters aggro
+            const distToPlayer = distance(base.x, base.y, this.player.x, this.player.y);
+            if (!base.raiderAggroActive && distToPlayer <= base.aggroRadius) {
+                base.raiderAggroActive = true;
+                base.raiderAutoTimer = 1.5;
+                base.queueRaiders(1);
+            }
+
+            if (spawnReady) {
+                this.spawnRaider(base);
+            }
+
+            const target = this.getBaseTarget(base);
+            if (target && base.canShootAt(target.x, target.y)) {
+                base.resetFireCooldown();
+                const speed = base.projectileSpeed || 440;
+                const attackRange = base.attackRange || base.aggroRadius || 0;
+                const lifetime = Math.max(attackRange / speed, 0.1);
+                this.projectiles.push(
+                    new Projectile(
+                        base.x,
+                        base.y,
+                        target.x,
+                        target.y,
+                        base.damage,
+                        base.team,
+                        speed,
+                        lifetime
+                    )
+                );
+            }
         }
 
         // Update NPCs
@@ -363,10 +447,21 @@ export class Game {
             const npc = this.npcs[i];
             npc.update(dt, this.player, this.nexus);
 
+            // SMG drawback: taking damage if enemies are too close
+            if (this.player.weaponType === 'smg') {
+                const closeRange = 40;
+                const closeDps = 8; // damage per second when too close
+                if (distance(npc.x, npc.y, this.player.x, this.player.y) <= closeRange) {
+                    this.player.takeDamage(closeDps * dt);
+                }
+            }
+
             // NPC shooting
             if (npc.canShoot()) {
                 const target = npc.getShootTarget();
                 if (target && npc.shoot()) {
+                    const npcProjectileSpeed = 420;
+                    const lifetime = Math.max(npc.range / npcProjectileSpeed, 0.1);
                     this.projectiles.push(
                         new Projectile(
                             npc.x,
@@ -375,7 +470,8 @@ export class Game {
                             target.y,
                             npc.damage,
                             npc.team,
-                            420
+                            npcProjectileSpeed,
+                            lifetime
                         )
                     );
                 }
@@ -462,6 +558,7 @@ export class Game {
             // Draw player
             const mouse = this.input.getMousePosition();
             this.renderer.drawPlayer(this.player, mouse.x, mouse.y);
+            this.renderer.drawCrosshair(mouse.x, mouse.y, this.player);
         }
     }
 
@@ -485,6 +582,8 @@ export class Game {
         const activeBases = this.bases.filter(b => !b.destroyed).length;
         if (activeBases === 0) {
             this.setState(GAME_STATES.LEVEL_UP);
+            this.updateHighestLevel();
+            this.saveProgress();
         }
     }
 
@@ -511,6 +610,41 @@ export class Game {
             `${Math.round(this.nexus.hp)} / ${this.nexus.maxHp}`;
     }
 
+    spawnRaider(base) {
+        if (!base || base.destroyed) return;
+
+        const spawn = base.getSpawnPoint();
+        const raider = new NPC(spawn.x, spawn.y, base.team, base, this.level);
+        // Configure raider to push toward Nexus (user turret)
+        raider.state = STATES.CHASE;
+        raider.target = this.nexus;
+        raider.senseRadius = 1200;
+        raider.leashRadius = 9999;
+        raider.stopDistance = 90;
+
+        this.npcs.push(raider);
+        base.guards.push(raider);
+    }
+
+    getBaseTarget(base) {
+        if (!base || base.destroyed) return null;
+
+        // Prioritize shooting the player if they are within range
+        if (this.player?.alive && base.isTargetInRange(this.player.x, this.player.y)) {
+            return this.player;
+        }
+
+        // Fallback: shoot the Nexus if it is close enough
+        const attackRange = base.attackRange || base.aggroRadius || 0;
+        const nexusRadius = Math.max(this.nexus.width, this.nexus.height) / 2;
+        const nexusDistance = distance(base.x, base.y, this.nexus.x, this.nexus.y) - nexusRadius;
+        if (nexusDistance <= attackRange) {
+            return this.nexus;
+        }
+
+        return null;
+    }
+
     spawnParticles(x, y, color, count = 6) {
         for (let i = 0; i < count; i++) {
             this.particles.push({
@@ -526,6 +660,59 @@ export class Game {
         }
     }
 
+    handleNexusTurret(dt) {
+        if (!this.nexus || this.nexus.destroyed) return;
+
+        const target = this.getNexusTarget();
+        if (!target) return;
+
+        if (this.nexus.fireCooldown <= 0) {
+            this.nexus.fireCooldown = this.nexus.fireRate;
+            const speed = this.nexus.projectileSpeed || 480;
+            const lifetime = Math.max(this.nexus.attackRange / speed, 0.1);
+            this.projectiles.push(
+                new Projectile(
+                    this.nexus.x,
+                    this.nexus.y,
+                    target.x,
+                    target.y,
+                    this.nexus.damage,
+                    'player',
+                    speed,
+                    lifetime
+                )
+            );
+        }
+    }
+
+    getNexusTarget() {
+        // Prioritize closest NPC within range
+        let closestNpc = null;
+        let closestDist = Infinity;
+        for (const npc of this.npcs) {
+            if (!npc.alive) continue;
+            const d = distance(this.nexus.x, this.nexus.y, npc.x, npc.y);
+            if (d <= this.nexus.attackRange && d < closestDist) {
+                closestDist = d;
+                closestNpc = npc;
+            }
+        }
+        if (closestNpc) return closestNpc;
+
+        // Otherwise aim at closest enemy base
+        let closestBase = null;
+        closestDist = Infinity;
+        for (const base of this.bases) {
+            if (base.destroyed) continue;
+            const d = distance(this.nexus.x, this.nexus.y, base.x, base.y);
+            if (d <= this.nexus.attackRange && d < closestDist) {
+                closestDist = d;
+                closestBase = base;
+            }
+        }
+        return closestBase;
+    }
+
     getAllEntities() {
         return [
             this.player,
@@ -534,5 +721,63 @@ export class Game {
             ...this.npcs,
             ...this.projectiles
         ];
+    }
+
+    // ===== Persistence =====
+
+    loadPersistedData() {
+        try {
+            const saved = localStorage.getItem('nexus-progress');
+            if (saved) {
+                this.savedProgress = JSON.parse(saved);
+                if (this.savedProgress.difficulty) {
+                    this.difficulty = this.savedProgress.difficulty;
+                    const diffSelect = getElement('difficulty');
+                    if (diffSelect) {
+                        diffSelect.value = this.difficulty;
+                    }
+                }
+                if (this.savedProgress.weapon) {
+                    this.weaponChoice = this.savedProgress.weapon;
+                    const weaponSelect = getElement('weapon');
+                    if (weaponSelect) {
+                        weaponSelect.value = this.weaponChoice;
+                    }
+                }
+            }
+
+            const highest = localStorage.getItem('nexus-highest');
+            if (highest) {
+                this.highestLevels = JSON.parse(highest);
+            }
+        } catch (e) {
+            console.warn('Failed to load progress', e);
+        }
+    }
+
+    saveProgress() {
+        try {
+            const data = {
+                level: this.level,
+                difficulty: this.difficulty,
+                weapon: this.weaponChoice
+            };
+            localStorage.setItem('nexus-progress', JSON.stringify(data));
+            this.updateHighestLevel();
+        } catch (e) {
+            console.warn('Failed to save progress', e);
+        }
+    }
+
+    updateHighestLevel() {
+        const currentHigh = this.highestLevels[this.difficulty] || 0;
+        if (this.level > currentHigh) {
+            this.highestLevels[this.difficulty] = this.level;
+            try {
+                localStorage.setItem('nexus-highest', JSON.stringify(this.highestLevels));
+            } catch (e) {
+                console.warn('Failed to save highest level', e);
+            }
+        }
     }
 }

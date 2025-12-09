@@ -13,33 +13,33 @@ export const DIFFICULTIES = {
         baseMin: 1,
         baseMax: 2,
         guardsPerBase: 1,
-        npcHpMultiplier: 0.9,
-        npcDamageMultiplier: 0.9,
-        aggroRadius: 180
+        npcHpMultiplier: 0.65,
+        npcDamageMultiplier: 0.65,
+        aggroRadius: 150
     },
     normal: {
         baseMin: 2,
         baseMax: 3,
-        guardsPerBase: 2,
-        npcHpMultiplier: 1.0,
-        npcDamageMultiplier: 1.0,
-        aggroRadius: 200
+        guardsPerBase: 1,
+        npcHpMultiplier: 0.8,
+        npcDamageMultiplier: 0.8,
+        aggroRadius: 170
     },
     hard: {
+        baseMin: 2,
+        baseMax: 3,
+        guardsPerBase: 2,
+        npcHpMultiplier: 0.95,
+        npcDamageMultiplier: 0.95,
+        aggroRadius: 190
+    },
+    insane: {
         baseMin: 3,
         baseMax: 4,
         guardsPerBase: 3,
         npcHpMultiplier: 1.15,
-        npcDamageMultiplier: 1.15,
+        npcDamageMultiplier: 1.1,
         aggroRadius: 210
-    },
-    insane: {
-        baseMin: 3,
-        baseMax: 5,
-        guardsPerBase: 4,
-        npcHpMultiplier: 1.35,
-        npcDamageMultiplier: 1.25,
-        aggroRadius: 220
     }
 };
 
