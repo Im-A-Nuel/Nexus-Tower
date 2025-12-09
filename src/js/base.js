@@ -22,6 +22,8 @@ export class Base {
 
         // Visual
         this.sprite = null;
+        this.flashTimer = 0;
+        this.flashDuration = 0.16;
 
         // Guards (untuk enemy bases)
         this.guards = [];
@@ -31,6 +33,9 @@ export class Base {
     }
 
     update(dt) {
+        // Decay hit flash
+        this.flashTimer = Math.max(0, this.flashTimer - dt);
+
         // Update destroyed state
         if (this.hp <= 0 && !this.destroyed) {
             this.destroyed = true;
@@ -48,6 +53,9 @@ export class Base {
             this.hp = 0;
             this.destroyed = true;
         }
+
+        // Trigger brief flash for feedback
+        this.flashTimer = this.flashDuration;
     }
 
     /**

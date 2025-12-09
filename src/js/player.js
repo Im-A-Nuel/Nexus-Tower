@@ -36,6 +36,10 @@ export class Player {
         this.dashDirX = 0;
         this.dashDirY = 0;
 
+        // Hit flash
+        this.flashTimer = 0;
+        this.flashDuration = 0.14;
+
         // Visual
         this.sprite = 'player_walk';
         this.animation = 'idle';
@@ -51,6 +55,7 @@ export class Player {
         // Update cooldowns
         this.fireCooldown = Math.max(0, this.fireCooldown - dt);
         this.dashCooldown = Math.max(0, this.dashCooldown - dt);
+        this.flashTimer = Math.max(0, this.flashTimer - dt);
 
         // Handle dash
         if (this.isDashing) {
@@ -142,6 +147,9 @@ export class Player {
             this.hp = 0;
             this.alive = false;
         }
+
+        // Trigger brief flash for feedback
+        this.flashTimer = this.flashDuration;
     }
 
     /**

@@ -177,6 +177,18 @@ export class Renderer {
             this.ctx.fill();
         }
 
+        // Hit flash overlay
+        if (player.flashTimer > 0) {
+            const intensity = Math.min(1, player.flashTimer / (player.flashDuration || 0.001));
+            this.ctx.globalAlpha = 0.25 + intensity * 0.45;
+            this.ctx.fillStyle = '#ffffff';
+            const flashRadius = player.sprite && this.sprites[player.sprite] ? player.radius * 2 : player.radius * 1.2;
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, flashRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.globalAlpha = 1;
+        }
+
         // HP bar (adjusted position for larger sprite)
         if (player.hp < player.maxHp) {
             const spriteSize = player.sprite && this.sprites[player.sprite] ? player.radius * 4 : player.radius;
@@ -249,6 +261,16 @@ export class Renderer {
             this.ctx.shadowBlur = 10;
             this.ctx.strokeRect(-nexus.width / 2, -nexus.height / 2, nexus.width, nexus.height);
             this.ctx.shadowBlur = 0;
+        }
+
+        // Hit flash overlay
+        if (nexus.flashTimer > 0) {
+            const intensity = Math.min(1, nexus.flashTimer / (nexus.flashDuration || 0.001));
+            this.ctx.globalAlpha = 0.2 + intensity * 0.45;
+            this.ctx.fillStyle = '#ffffff';
+            const flashSize = nexus.sprite && this.sprites[nexus.sprite] ? nexus.width * 1.35 : nexus.width * 1.05;
+            this.ctx.fillRect(-flashSize / 2, -flashSize / 2, flashSize, flashSize);
+            this.ctx.globalAlpha = 1;
         }
 
         // HP bar (adjusted position for larger sprite)
@@ -350,6 +372,16 @@ export class Renderer {
             this.ctx.shadowBlur = 0;
         }
 
+        // Hit flash overlay
+        if (base.flashTimer > 0) {
+            const intensity = Math.min(1, base.flashTimer / (base.flashDuration || 0.001));
+            this.ctx.globalAlpha = 0.2 + intensity * 0.45;
+            this.ctx.fillStyle = '#ffffff';
+            const flashSize = base.sprite && this.sprites[base.sprite] ? base.width * 1.35 : base.width * 1.05;
+            this.ctx.fillRect(-flashSize / 2, -flashSize / 2, flashSize, flashSize);
+            this.ctx.globalAlpha = 1;
+        }
+
         // HP bar (adjusted position for larger sprite)
         const baseDisplaySize = base.sprite && this.sprites[base.sprite] ? base.width * 1.3 : base.width;
         this.drawHealthBar(0, -baseDisplaySize / 2 - 14, baseDisplaySize * 0.75, 6, base.hp, base.maxHp, '#ef4444');
@@ -433,6 +465,18 @@ export class Renderer {
             this.ctx.beginPath();
             this.ctx.arc(-npc.radius * 0.3, -npc.radius * 0.3, npc.radius * 0.4, 0, Math.PI * 2);
             this.ctx.fill();
+        }
+
+        // Hit flash overlay
+        if (npc.flashTimer > 0) {
+            const intensity = Math.min(1, npc.flashTimer / (npc.flashDuration || 0.001));
+            this.ctx.globalAlpha = 0.22 + intensity * 0.4;
+            this.ctx.fillStyle = '#ffffff';
+            const flashRadius = npc.sprite && this.sprites[npc.sprite] ? npc.radius * 1.8 : npc.radius * 1.2;
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, flashRadius, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.globalAlpha = 1;
         }
 
         // HP bar (adjusted position for larger sprite)

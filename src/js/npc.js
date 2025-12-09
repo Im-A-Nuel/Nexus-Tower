@@ -55,6 +55,10 @@ export class NPC {
         this.sprite = this.chooseSprite(level);
         this.facing = 0;
 
+        // Hit flash
+        this.flashTimer = 0;
+        this.flashDuration = 0.14;
+
         // State
         this.alive = true;
     }
@@ -80,6 +84,7 @@ export class NPC {
 
         // Update cooldowns
         this.fireCooldown = Math.max(0, this.fireCooldown - dt);
+        this.flashTimer = Math.max(0, this.flashTimer - dt);
 
         // FSM Logic
         switch (this.state) {
@@ -244,6 +249,9 @@ export class NPC {
             this.hp = 0;
             this.alive = false;
         }
+
+        // Trigger brief flash for feedback
+        this.flashTimer = this.flashDuration;
     }
 
     // ===== Helpers =====
