@@ -510,6 +510,52 @@ export class Renderer {
         this.ctx.restore();
     }
 
+    drawCrosshair(x, y) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+
+        // Outer ring with glow
+        this.ctx.shadowColor = '#22d3ee';
+        this.ctx.shadowBlur = 14;
+        this.ctx.strokeStyle = 'rgba(15, 23, 42, 0.9)';
+        this.ctx.lineWidth = 6;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 12, 0, Math.PI * 2);
+        this.ctx.stroke();
+
+        // Inner ring
+        this.ctx.shadowBlur = 0;
+        this.ctx.strokeStyle = '#22d3ee';
+        this.ctx.lineWidth = 2.5;
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 10, 0, Math.PI * 2);
+        this.ctx.stroke();
+
+        // Cross arms
+        const arm = 14;
+        const gap = 6;
+        this.ctx.lineWidth = 3;
+        this.ctx.strokeStyle = '#e2e8f0';
+        this.ctx.beginPath();
+        this.ctx.moveTo(-arm, 0);
+        this.ctx.lineTo(-gap, 0);
+        this.ctx.moveTo(gap, 0);
+        this.ctx.lineTo(arm, 0);
+        this.ctx.moveTo(0, -arm);
+        this.ctx.lineTo(0, -gap);
+        this.ctx.moveTo(0, gap);
+        this.ctx.lineTo(0, arm);
+        this.ctx.stroke();
+
+        // Center dot
+        this.ctx.fillStyle = '#22d3ee';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+
+        this.ctx.restore();
+    }
+
     // ===== UI Elements =====
 
     drawHealthBar(x, y, width, height, current, max, color) {

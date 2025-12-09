@@ -462,6 +462,7 @@ export class Game {
             // Draw player
             const mouse = this.input.getMousePosition();
             this.renderer.drawPlayer(this.player, mouse.x, mouse.y);
+            this.renderer.drawCrosshair(mouse.x, mouse.y);
         }
     }
 
