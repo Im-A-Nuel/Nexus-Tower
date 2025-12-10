@@ -197,7 +197,7 @@ export class NPC {
      */
     setAnimState(newState) {
         if (this.animState === newState) return;
-        if (this.isPlayingDeath) return; // Don't change during death
+        if (this.isPlayingDeath && newState !== ANIM_STATES.DEATH) return; // Allow switching to death state
 
         this.animState = newState;
 
@@ -245,11 +245,11 @@ export class NPC {
         if (!this.alive) {
             if (!this.isPlayingDeath) {
                 // Start death animation
-                this.isPlayingDeath = true;
                 this.setAnimState(ANIM_STATES.DEATH);
                 if (this.animators.death) {
                     this.animators.death.reset();
                 }
+                this.isPlayingDeath = true;
             }
 
             // Update death animator
