@@ -4,7 +4,7 @@
  */
 
 export class Projectile {
-    constructor(x, y, targetX, targetY, damage, owner, speed = 560, lifetime = 1.5) {
+    constructor(x, y, targetX, targetY, damage, owner, speed = 560, lifetime = 1.5, splashRadius = 0) {
         this.x = x;
         this.y = y;
         this.radius = 6; // Increased from 4 to 6 for better visibility
@@ -19,6 +19,7 @@ export class Projectile {
         this.damage = damage;
         this.owner = owner; // 'player', 'red', 'blue', 'green'
         this.speed = speed;
+        this.splashRadius = splashRadius;
 
         // Lifetime
         this.lifetime = lifetime; // seconds

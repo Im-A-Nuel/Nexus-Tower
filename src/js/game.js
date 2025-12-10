@@ -91,6 +91,7 @@ export class Game {
         this.setupDamageCallback();
         this.loadPersistedData();
         this.startAssetLoading();
+        this.updateCurrentWeaponHUD();
     }
 
     // ===== Setup =====
@@ -136,7 +137,7 @@ export class Game {
         const weaponSelect = getElement('weapon');
         if (weaponSelect) {
             weaponSelect.addEventListener('change', (e) => {
-                this.weaponChoice = e.target.value;
+                this.setWeaponChoice(e.target.value);
             });
         }
 
@@ -252,6 +253,8 @@ export class Game {
         this.npcs = [];
         this.projectiles = [];
         this.particles = [];
+
+        this.updateCurrentWeaponHUD();
     }
 
     loadLevel(level) {
@@ -437,6 +440,21 @@ export class Game {
         // Check for range overlay toggle
         if (this.input.isKeyPressed('r')) {
             this.renderer.toggleRanges();
+        }
+
+        // Weapon hotkeys (1-4)
+        const weaponHotkey = this.input.getWeaponHotkey ? this.input.getWeaponHotkey() : null;
+        if (weaponHotkey) {
+            const hotkeyMap = {
+                '1': 'rifle',
+                '2': 'sniper',
+                '3': 'shotgun',
+                '4': 'smg'
+            };
+            const chosenWeapon = hotkeyMap[weaponHotkey];
+            if (chosenWeapon) {
+                this.setWeaponChoice(chosenWeapon);
+            }
         }
 
         // Update player
@@ -846,7 +864,8 @@ export class Game {
                     this.nexus.damage,
                     'player',
                     speed,
-                    lifetime
+                    lifetime,
+                    this.nexus.splashRadius || 0
                 )
             );
         }
@@ -961,6 +980,49 @@ export class Game {
         }
     }
 
+    /**
+     * Apply weapon choice to player and persist + sync UI
+     */
+    setWeaponChoice(weaponKey) {
+        const allowed = ['rifle', 'sniper', 'shotgun', 'smg'];
+        if (!allowed.includes(weaponKey)) return;
+
+        this.weaponChoice = weaponKey;
+
+        if (this.player) {
+            this.player.applyWeaponStats(weaponKey);
+        }
+
+        const weaponSelect = getElement('weapon');
+        if (weaponSelect && weaponSelect.value !== weaponKey) {
+            weaponSelect.value = weaponKey;
+        }
+
+        this.updateCurrentWeaponHUD();
+
+        // Save preference so it sticks between sessions
+        this.saveProgress();
+    }
+
+    /**
+     * Update HUD label for current weapon
+     */
+    updateCurrentWeaponHUD() {
+        const guideLabel = getElement('weapon-guide-current');
+
+        const names = {
+            rifle: 'Rifle',
+            sniper: 'Sniper',
+            shotgun: 'Shotgun',
+            smg: 'SMG'
+        };
+        const name = names[this.weaponChoice] || 'Rifle';
+
+        if (guideLabel) {
+            guideLabel.textContent = name;
+        }
+    }
+
     // ===== Persistence =====
 
     loadPersistedData() {
@@ -991,6 +1053,8 @@ export class Game {
         } catch (e) {
             console.warn('Failed to load progress', e);
         }
+
+        this.updateCurrentWeaponHUD();
     }
 
     saveProgress() {

@@ -117,6 +117,22 @@
                         <kbd>A</kbd>
                         <span>Toggle Aggro Radius (Debug)</span>
                     </div>
+                    <div class="control-item">
+                        <kbd>1</kbd>
+                        <span>Rifle</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>2</kbd>
+                        <span>Sniper</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>3</kbd>
+                        <span>Shotgun</span>
+                    </div>
+                    <div class="control-item">
+                        <kbd>4</kbd>
+                        <span>SMG</span>
+                    </div>
                 </div>
                 <button id="btn-back-controls" class="btn btn-secondary">Back to Menu</button>
             </div>
@@ -133,6 +149,18 @@
                 <div class="indicator-coords">
                     <span id="player-x">X: 0</span> | <span id="player-y">Y: 0</span>
                 </div>
+            </div>
+
+            <!-- Weapon Guide Card -->
+            <div id="weapon-guide" class="weapon-guide">
+                <div class="weapon-guide-title">Weapons</div>
+                <div class="weapon-guide-current">Current: <span id="weapon-guide-current">Rifle</span></div>
+                <ul class="weapon-guide-list">
+                    <li><span class="hotkey">1</span> Rifle</li>
+                    <li><span class="hotkey">2</span> Sniper</li>
+                    <li><span class="hotkey">3</span> Shotgun</li>
+                    <li><span class="hotkey">4</span> SMG</li>
+                </ul>
             </div>
 
             <canvas id="gameCanvas" width="1600" height="900"></canvas>

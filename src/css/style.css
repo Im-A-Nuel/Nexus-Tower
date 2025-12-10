@@ -287,6 +287,58 @@ kbd {
     color: #cbd5e1;
 }
 
+.weapon-guide {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 180px;
+    background: rgba(15, 23, 42, 0.95);
+    border: 2px solid #334155;
+    border-radius: 10px;
+    padding: 10px 12px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+}
+
+.weapon-guide-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #22d3ee;
+    margin-bottom: 6px;
+    text-shadow: 0 0 8px rgba(34, 211, 238, 0.5);
+}
+
+.weapon-guide-current {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 8px;
+}
+
+.weapon-guide-current span {
+    color: #22d3ee;
+    text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+}
+
+.weapon-guide-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    color: #cbd5e1;
+}
+
+.weapon-guide-list .hotkey {
+    display: inline-block;
+    min-width: 18px;
+    font-weight: 800;
+    color: #94a3b8;
+}
+
 /* ===== HUD ===== */
 .hud {
     position: absolute;

@@ -333,7 +333,7 @@ export class Player {
                 spread: 0
             },
             sniper: {
-                damage: 80,
+                damage: 85,
                 fireRate: 1.0,
                 range: 420,
                 projectileSpeed: 620,

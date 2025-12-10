@@ -120,11 +120,12 @@ export class Nexus extends Base {
         this.sprite = nexusTowerSprites[Math.floor(Math.random() * nexusTowerSprites.length)];
 
         // Turret stats (player base can attack)
-        this.damage = 20;
+        this.damage = 32; // Higher base damage for early impact
         this.attackRange = 260;
-        this.fireRate = 1.2;
+        this.fireRate = 0.9; // Faster baseline fire rate
         this.fireCooldown = 0;
-        this.projectileSpeed = 480;
+        this.projectileSpeed = 520;
+        this.splashRadius = 80; // Area attack radius for Nexus shots
     }
 
     /**
@@ -136,6 +137,13 @@ export class Nexus extends Base {
 
         // Restore some HP
         this.hp = Math.min(this.maxHp, this.hp + Math.floor(this.maxHp * 0.5));
+
+        // Scale offensive power to keep up with level
+        this.damage += 6; // more punch each level
+        this.attackRange = Math.min(360, this.attackRange + 6); // modest range bump, capped
+        this.projectileSpeed += 12; // faster shots feel snappier
+        this.fireRate = Math.max(0.6, this.fireRate - 0.05); // faster firing, capped
+        this.splashRadius = Math.min(140, this.splashRadius + 8); // larger blast over time
     }
 
     update(dt) {

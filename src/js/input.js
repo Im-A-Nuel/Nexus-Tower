@@ -17,7 +17,11 @@ export class InputManager {
             f: false,
             escape: false,
             g: false, // Debug grid toggle
-            r: false  // Range overlay toggle
+            r: false, // Range overlay toggle
+            '1': false,
+            '2': false,
+            '3': false,
+            '4': false
         };
 
         // Mouse state
@@ -70,6 +74,10 @@ export class InputManager {
             case 'escape': this.keys.escape = true; break;
             case 'g': this.keys.g = true; break;
             case 'r': this.keys.r = true; break;
+            case '1': this.keys['1'] = true; break;
+            case '2': this.keys['2'] = true; break;
+            case '3': this.keys['3'] = true; break;
+            case '4': this.keys['4'] = true; break;
         }
     }
 
@@ -86,6 +94,10 @@ export class InputManager {
             case 'escape': this.keys.escape = false; break;
             case 'g': this.keys.g = false; break;
             case 'r': this.keys.r = false; break;
+            case '1': this.keys['1'] = false; break;
+            case '2': this.keys['2'] = false; break;
+            case '3': this.keys['3'] = false; break;
+            case '4': this.keys['4'] = false; break;
         }
     }
 
@@ -160,6 +172,19 @@ export class InputManager {
             x: this.mouse.worldX,
             y: this.mouse.worldY
         };
+    }
+
+    /**
+     * Check if any weapon hotkey (1-4) was pressed this frame
+     */
+    getWeaponHotkey() {
+        const hotkeys = ['1', '2', '3', '4'];
+        for (const key of hotkeys) {
+            if (this.isKeyPressed(key)) {
+                return key;
+            }
+        }
+        return null;
     }
 
     /**
