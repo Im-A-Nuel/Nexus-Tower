@@ -26,6 +26,7 @@ export class Renderer {
         // Debug options
         this.showGrid = false;
         this.showAggroRadius = false; // Hidden by default for cleaner gameplay
+        this.showRanges = true; // Show firing/attack ranges
         this.showCollisionBoxes = false;
 
         // Loaded sprites (akan diisi dari luar)
@@ -152,6 +153,48 @@ export class Renderer {
         // Ensure full opacity
         this.ctx.globalAlpha = 1.0;
 
+        // Dash dust trail
+        if (player.dashDustTimer > 0 && this.sprites[`player_${player.characterType}`]?.dust && player.animators?.dust) {
+            const dustAnim = player.animators.dust;
+            const dustSprite = this.sprites[`player_${player.characterType}`].dust;
+            const frameIndex = dustAnim.getCurrentFrame ? dustAnim.getCurrentFrame() : 0;
+            const frames = 6;
+            const frameWidth = dustSprite.width / frames;
+            const frameHeight = dustSprite.height;
+            const size = player.radius * 3;
+            this.ctx.save();
+            const backX = -Math.cos(player.facing) * player.radius * 0.8;
+            const backY = -Math.sin(player.facing) * player.radius * 0.8;
+            this.ctx.translate(backX, backY);
+            drawSpriteFrame(
+                this.ctx,
+                dustSprite,
+                frameIndex,
+                frameWidth,
+                frameHeight,
+                -size / 2,
+                -size / 2,
+                size,
+                size
+            );
+            this.ctx.restore();
+        }
+
+        // Weapon range visualization
+        if (this.showRanges && player.range) {
+            this.ctx.save();
+            this.ctx.fillStyle = 'rgba(34, 211, 238, 0.08)';
+            this.ctx.strokeStyle = 'rgba(34, 211, 238, 0.55)';
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([8, 6]);
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, player.range, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+            this.ctx.restore();
+        }
+
         // Shadow
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         this.ctx.beginPath();
@@ -173,7 +216,9 @@ export class Renderer {
             this.ctx.shadowOffsetY = 5;
 
             // Get sprite config berdasarkan animation state
-            const configKey = player.animation === 'idle' ? 'PLAYER_IDLE' : 'PLAYER_WALK';
+            let configKey = 'PLAYER_IDLE';
+            if (player.animation === 'walk') configKey = 'PLAYER_WALK';
+            if (player.animation === 'attack') configKey = 'PLAYER_ATTACK';
             const config = SPRITE_CONFIGS[configKey];
 
             // Get frame dari player's animator
@@ -245,6 +290,21 @@ export class Renderer {
 
         // Ensure full opacity
         this.ctx.globalAlpha = 1.0;
+
+        // Attack range visualization
+        if (this.showRanges && nexus.attackRange) {
+            this.ctx.save();
+            this.ctx.fillStyle = 'rgba(74, 222, 128, 0.08)';
+            this.ctx.strokeStyle = 'rgba(74, 222, 128, 0.55)';
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([10, 8]);
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, nexus.attackRange, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.stroke();
+            this.ctx.setLineDash([]);
+            this.ctx.restore();
+        }
 
         // Aggro radius (disabled for cleaner look)
         // if (this.showAggroRadius) {
@@ -752,13 +812,11 @@ export class Renderer {
 
     drawCrosshair(x, y, player) {
         if (!player) return;
-        const showCrosshair = player.weaponType === 'rifle' || player.weaponType === 'sniper';
-        if (!showCrosshair) return;
 
         this.ctx.save();
         this.ctx.translate(x, y);
 
-        const size = 16;
+        const size = 18;
         this.ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
@@ -774,13 +832,13 @@ export class Renderer {
 
         // Inner ring
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, size / 2.5, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, size / 2.2, 0, Math.PI * 2);
         this.ctx.stroke();
 
         // Center dot
         this.ctx.fillStyle = 'rgba(255,255,255,0.9)';
         this.ctx.beginPath();
-        this.ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
+        this.ctx.arc(0, 0, 3, 0, Math.PI * 2);
         this.ctx.fill();
 
         this.ctx.restore();
@@ -793,6 +851,27 @@ export class Renderer {
         this.ctx.beginPath();
         this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         this.ctx.fill();
+        this.ctx.restore();
+    }
+
+    drawDamageTexts(texts) {
+        if (!texts || texts.length === 0) return;
+        this.ctx.save();
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        for (const t of texts) {
+            const alpha = Math.max(0, t.life / t.maxLife);
+            const yOffset = (1 - alpha) * 32; // float upward over time
+            const baseOffset = 18;
+            this.ctx.globalAlpha = alpha;
+            this.ctx.fillStyle = t.color || '#ef4444';
+            this.ctx.font = '18px Arial';
+            this.ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+            this.ctx.lineWidth = 3;
+            const drawY = t.y - baseOffset - yOffset;
+            this.ctx.strokeText(t.value, t.x, drawY);
+            this.ctx.fillText(t.value, t.x, drawY);
+        }
         this.ctx.restore();
     }
 
@@ -855,6 +934,10 @@ export class Renderer {
 
     toggleAggroRadius() {
         this.showAggroRadius = !this.showAggroRadius;
+    }
+
+    toggleRanges() {
+        this.showRanges = !this.showRanges;
     }
 
     drawDebugInfo(game) {

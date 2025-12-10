@@ -524,7 +524,7 @@ kbd {
 }
 
 .character-card.selected::before {
-    content: '✓';
+  content: '✓';
     position: absolute;
     top: 8px;
     right: 8px;
@@ -538,6 +538,8 @@ kbd {
     justify-content: center;
     font-weight: 700;
     font-size: 14px;
+    z-index: 3;
+    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.2);
 }
 
 .character-preview {

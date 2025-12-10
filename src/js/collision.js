@@ -8,6 +8,7 @@ import { circleCollision, circleRectCollision } from './utils.js';
 export class CollisionHandler {
     constructor() {
         this.particleCallbacks = []; // Callbacks untuk spawn particles
+        this.damageCallbacks = [];   // Callbacks untuk spawn damage text
     }
 
     /**
@@ -22,6 +23,20 @@ export class CollisionHandler {
      */
     spawnParticles(x, y, color, count = 6) {
         this.particleCallbacks.forEach(cb => cb(x, y, color, count));
+    }
+
+    /**
+     * Register callback for damage numbers
+     */
+    onDamage(callback) {
+        this.damageCallbacks.push(callback);
+    }
+
+    /**
+     * Spawn floating damage text
+     */
+    spawnDamage(x, y, amount, color) {
+        this.damageCallbacks.forEach(cb => cb(x, y, amount, color));
     }
 
     /**
@@ -55,6 +70,7 @@ export class CollisionHandler {
                         npc.takeDamage(proj.damage);
                         npc.hitFlashTimer = 0.18;
                         this.spawnParticles(npc.x, npc.y, '#fbbf24');
+                        this.spawnDamage(npc.x, npc.y - npc.radius, proj.damage, '#ef4444');
                         proj.destroy();
                         hitNPC = true;
                         break;
@@ -75,6 +91,7 @@ export class CollisionHandler {
                         base.takeDamage(proj.damage);
                         base.hitFlashTimer = 0.2;
                         this.spawnParticles(proj.x, proj.y, '#5eead4');
+                        this.spawnDamage(proj.x, proj.y - base.height / 2, proj.damage, '#ef4444');
                         proj.destroy();
                         break;
                     }
@@ -90,6 +107,7 @@ export class CollisionHandler {
                 )) {
                     player.takeDamage(proj.damage);
                     this.spawnParticles(player.x, player.y, '#f87171');
+                    this.spawnDamage(player.x, player.y - player.radius, proj.damage, '#ef4444');
                     proj.destroy();
                     continue;
                 }
@@ -101,6 +119,7 @@ export class CollisionHandler {
                 )) {
                     nexus.takeDamage(proj.damage);
                     this.spawnParticles(proj.x, proj.y, '#f87171');
+                    this.spawnDamage(proj.x, proj.y - nexus.height / 2, proj.damage, '#ef4444');
                     proj.destroy();
                     continue;
                 }

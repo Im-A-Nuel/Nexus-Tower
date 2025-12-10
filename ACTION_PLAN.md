@@ -575,5 +575,14 @@ Dengan polish dan extra features: tambahkan 50-100% dari estimasi di atas.
 ---
 
 **Created:** 2025-01-27
-**Last Updated:** 2025-01-27
-**Version:** 1.0
+**Last Updated:** 2025-12-10
+**Version:** 1.1
+
+---
+
+## PROGRESS (2025-12-10)
+
+- Implemented visual attack ranges (toggleable) dan aggro toggle terpisah.
+- Enemy visuals locked to Soldier set; attack anim uses Shot_2; damage numbers added (red floating text).
+- Player polish: dash dust, crosshair always visible, character cards fully clickable with visible checkmark.
+- HUD/UI: range overlays, improved damage readability.

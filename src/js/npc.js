@@ -5,7 +5,7 @@
  */
 
 import { distance, normalize, angleTo } from './utils.js';
-import { SpriteAnimator } from './sprite-animator.js';
+import { SpriteAnimator, SPRITE_CONFIGS } from './sprite-animator.js';
 
 // FSM States
 const STATES = {
@@ -94,9 +94,8 @@ export class NPC {
     }
 
     chooseSprite(level) {
-        // Use Monster sprites - randomly choose one of 3 types
-        const monsterTypes = ['enemy_pink', 'enemy_owlet', 'enemy_dude'];
-        return monsterTypes[Math.floor(Math.random() * monsterTypes.length)];
+        // Use Soldier 1 sprites for all enemies
+        return 'soldier_1';
     }
 
     /**
@@ -104,6 +103,7 @@ export class NPC {
      */
     initAnimator(sprites) {
         const isMonster = this.sprite && this.sprite.startsWith('enemy_');
+        const isSoldier = this.sprite && this.sprite.startsWith('soldier_');
 
         if (isMonster) {
             const monsterSprites = sprites[this.sprite];
@@ -142,6 +142,51 @@ export class NPC {
             }
 
             // Set initial animator
+            this.currentAnimator = this.animators.idle || this.animators.walk;
+            this.animState = ANIM_STATES.IDLE;
+            return;
+        }
+
+        if (isSoldier) {
+            const soldierSprites = sprites[this.sprite];
+            if (!soldierSprites) {
+                console.warn('NPC: Soldier sprites not found!', this.sprite);
+                return;
+            }
+
+            const cfg = {
+                idle: SPRITE_CONFIGS.SOLDIER_IDLE,
+                walk: SPRITE_CONFIGS.SOLDIER_WALK,
+                run: SPRITE_CONFIGS.SOLDIER_RUN,
+                attack: SPRITE_CONFIGS.SOLDIER_ATTACK,
+                hurt: SPRITE_CONFIGS.SOLDIER_HURT,
+                death: SPRITE_CONFIGS.SOLDIER_DEAD
+            };
+
+            const animConfigs = {
+                idle: { sheet: soldierSprites.idle, config: cfg.idle },
+                walk: { sheet: soldierSprites.walk, config: cfg.walk },
+                run: { sheet: soldierSprites.run, config: cfg.run },
+                attack: { sheet: soldierSprites.attack, config: cfg.attack },
+                hurt: { sheet: soldierSprites.hurt, config: cfg.hurt },
+                death: { sheet: soldierSprites.death, config: cfg.death, loop: false }
+            };
+
+            for (const [state, data] of Object.entries(animConfigs)) {
+                const { sheet, config, loop = true } = data;
+                if (sheet && sheet.width && config) {
+                    const animator = new SpriteAnimator(
+                        sheet,
+                        config.frames,
+                        config.width,
+                        config.height
+                    );
+                    animator.setFrameRate(config.frameRate);
+                    animator.loop = loop !== false;
+                    this.animators[state] = animator;
+                }
+            }
+
             this.currentAnimator = this.animators.idle || this.animators.walk;
             this.animState = ANIM_STATES.IDLE;
         }

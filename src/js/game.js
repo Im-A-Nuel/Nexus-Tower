@@ -43,6 +43,7 @@ export class Game {
         this.npcs = [];
         this.projectiles = [];
         this.particles = [];
+        this.damageTexts = [];
 
         // DOM elements (screens)
         this.screens = {
@@ -87,6 +88,7 @@ export class Game {
         // Setup
         this.setupEventListeners();
         this.setupParticleCallback();
+        this.setupDamageCallback();
         this.loadPersistedData();
         this.startAssetLoading();
     }
@@ -110,6 +112,10 @@ export class Game {
                 // Store character choice
                 this.characterChoice = card.dataset.character;
             });
+            // Make the entire card clickable (including children)
+            card.style.pointerEvents = 'auto';
+            const children = card.querySelectorAll('*');
+            children.forEach(child => child.style.pointerEvents = 'none');
         });
 
         // Select first character by default
@@ -150,6 +156,12 @@ export class Game {
     setupParticleCallback() {
         this.collision.onParticleSpawn((x, y, color, count) => {
             this.spawnParticles(x, y, color, count);
+        });
+    }
+
+    setupDamageCallback() {
+        this.collision.onDamage((x, y, amount, color) => {
+            this.spawnDamageText(x, y, amount, color);
         });
     }
 
@@ -422,6 +434,11 @@ export class Game {
             this.renderer.toggleAggroRadius();
         }
 
+        // Check for range overlay toggle
+        if (this.input.isKeyPressed('r')) {
+            this.renderer.toggleRanges();
+        }
+
         // Update player
         this.player.update(dt, this.input, this.canvas);
 
@@ -572,6 +589,16 @@ export class Game {
             }
         }
 
+        // Update damage texts
+        for (let i = this.damageTexts.length - 1; i >= 0; i--) {
+            const t = this.damageTexts[i];
+            t.life -= dt;
+            t.y += t.vy * dt;
+            if (t.life <= 0) {
+                this.damageTexts.splice(i, 1);
+            }
+        }
+
         // Check collisions
         this.collision.checkAllCollisions(
             this.player,
@@ -621,6 +648,9 @@ export class Game {
             for (const particle of this.particles) {
                 this.renderer.drawParticle(particle);
             }
+
+            // Draw damage numbers
+            this.renderer.drawDamageTexts(this.damageTexts);
 
             // Draw player
             const mouse = this.input.getMousePosition();
@@ -783,6 +813,18 @@ export class Game {
                 size: 3
             });
         }
+    }
+
+    spawnDamageText(x, y, amount, color) {
+        this.damageTexts.push({
+            x,
+            y,
+            value: Math.round(amount),
+            color,
+            life: 0.9,
+            maxLife: 0.9,
+            vy: -40
+        });
     }
 
     handleNexusTurret(dt) {

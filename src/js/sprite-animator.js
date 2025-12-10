@@ -87,6 +87,7 @@ export const SPRITE_CONFIGS = {
     PLAYER_RUN: { frames: 6, width: 32, height: 32, frameRate: 0.06 },
     PLAYER_HURT: { frames: 4, width: 32, height: 32, frameRate: 0.1 },
     PLAYER_DEATH: { frames: 8, width: 32, height: 32, frameRate: 0.12 },
+    PLAYER_ATTACK: { frames: 6, width: 32, height: 32, frameRate: 0.08 },
 
     CASTLE: { frames: 5, width: 64, height: 64, frameRate: 0.2 },
 
@@ -94,12 +95,13 @@ export const SPRITE_CONFIGS = {
     ENEMY_SD: { frames: 6, width: 64, height: 64, frameRate: 0.1 },
 
     // Soldier sprites
-    SOLDIER_IDLE: { frames: 4, width: 64, height: 64, frameRate: 0.15 },
-    SOLDIER_WALK: { frames: 8, width: 64, height: 64, frameRate: 0.1 },
-    SOLDIER_RUN: { frames: 8, width: 64, height: 64, frameRate: 0.08 },
-    SOLDIER_ATTACK: { frames: 4, width: 64, height: 64, frameRate: 0.1 },
-    SOLDIER_HURT: { frames: 3, width: 64, height: 64, frameRate: 0.1 },
-    SOLDIER_DEAD: { frames: 6, width: 64, height: 64, frameRate: 0.12 },
+    // Craftpix Soldier 1 sheets: 128px tall, frames derived from sheet widths
+    SOLDIER_IDLE: { frames: 7, width: 128, height: 128, frameRate: 0.14 },
+    SOLDIER_WALK: { frames: 7, width: 128, height: 128, frameRate: 0.1 },
+    SOLDIER_RUN: { frames: 8, width: 128, height: 128, frameRate: 0.08 },
+    SOLDIER_ATTACK: { frames: 4, width: 128, height: 128, frameRate: 0.1 },
+    SOLDIER_HURT: { frames: 3, width: 128, height: 128, frameRate: 0.1 },
+    SOLDIER_DEAD: { frames: 4, width: 128, height: 128, frameRate: 0.14 },
 
     ENEMY_SLIME: { frames: 4, width: 32, height: 32, frameRate: 0.12 },
     ENEMY_BAT: { frames: 4, width: 32, height: 32, frameRate: 0.08 },

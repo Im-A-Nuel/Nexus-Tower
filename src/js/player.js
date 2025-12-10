@@ -51,11 +51,16 @@ export class Player {
 
         // Animation timers
         this.animationTime = 0;
+        this.attackTimer = 0;
+        this.attackDuration = 0.35;
+        this.dashDustTimer = 0;
 
         // Create animators (akan di-init setelah assets loaded)
         this.animators = {
             idle: null,
-            walk: null
+            walk: null,
+            attack: null,
+            dust: null
         };
 
         // State
@@ -68,6 +73,7 @@ export class Player {
         // Update cooldowns
         this.fireCooldown = Math.max(0, this.fireCooldown - dt);
         this.dashCooldown = Math.max(0, this.dashCooldown - dt);
+        this.dashDustTimer = Math.max(0, this.dashDustTimer - dt);
 
         // Handle dash
         if (this.isDashing) {
@@ -129,6 +135,12 @@ export class Player {
         if (this.animators[this.animation]) {
             this.animators[this.animation].update(dt);
         }
+
+        if (this.dashDustTimer > 0 && this.animators.dust) {
+            this.animators.dust.update(dt);
+        } else if (this.animators.dust) {
+            this.animators.dust.reset();
+        }
     }
 
     /**
@@ -149,6 +161,7 @@ export class Player {
         this.isDashing = true;
         this.dashTimer = this.dashDuration;
         this.dashCooldown = this.dashCooldownMax;
+        this.dashDustTimer = 0.25;
 
         return true;
     }
@@ -274,6 +287,22 @@ export class Player {
         if (characterSprites.walk) {
             this.animators.walk = new SpriteAnimator(characterSprites.walk, 6, 32, 32);
             this.animators.walk.setFrameRate(0.08);
+        }
+
+        // Initialize attack animator (use push/walk_attack sheet)
+        const attackSheet = characterSprites.push || characterSprites.walk_attack;
+        if (attackSheet) {
+            this.animators.attack = new SpriteAnimator(attackSheet, 6, 32, 32);
+            this.animators.attack.setFrameRate(0.08);
+        }
+
+        // Dash dust animator
+        if (characterSprites.dust) {
+            const frames = 6;
+            const frameWidth = characterSprites.dust.width / frames;
+            const frameHeight = characterSprites.dust.height;
+            this.animators.dust = new SpriteAnimator(characterSprites.dust, frames, frameWidth, frameHeight);
+            this.animators.dust.setFrameRate(0.06);
         }
 
         // Store character type for renderer

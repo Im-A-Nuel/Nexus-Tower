@@ -16,7 +16,8 @@ export class InputManager {
             space: false,
             f: false,
             escape: false,
-            g: false // Debug grid toggle
+            g: false, // Debug grid toggle
+            r: false  // Range overlay toggle
         };
 
         // Mouse state
@@ -68,6 +69,7 @@ export class InputManager {
             case 'f': this.keys.f = true; break;
             case 'escape': this.keys.escape = true; break;
             case 'g': this.keys.g = true; break;
+            case 'r': this.keys.r = true; break;
         }
     }
 
@@ -83,6 +85,7 @@ export class InputManager {
             case 'f': this.keys.f = false; break;
             case 'escape': this.keys.escape = false; break;
             case 'g': this.keys.g = false; break;
+            case 'r': this.keys.r = false; break;
         }
     }
 

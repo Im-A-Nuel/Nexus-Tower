@@ -22,6 +22,9 @@ export class AssetLoader {
                 idle: 'assets/sprites/player/Pink_Monster_Idle_4.png',
                 walk: 'assets/sprites/player/Pink_Monster_Walk_6.png',
                 run: 'assets/sprites/player/Pink_Monster_Run_6.png',
+                push: 'assets/sprites/player/Pink_Monster_Push_6.png',
+                walk_attack: 'assets/sprites/player/Pink_Monster_Walk+Attack_6.png',
+                dust: 'assets/sprites/player/Walk_Run_Push_Dust_6.png',
                 hurt: 'assets/sprites/player/Pink_Monster_Hurt_4.png',
                 death: 'assets/sprites/player/Pink_Monster_Death_8.png'
             },
@@ -31,6 +34,9 @@ export class AssetLoader {
                 idle: 'assets/sprites/player/2 Owlet_Monster/Owlet_Monster_Idle_4.png',
                 walk: 'assets/sprites/player/2 Owlet_Monster/Owlet_Monster_Walk_6.png',
                 run: 'assets/sprites/player/2 Owlet_Monster/Owlet_Monster_Run_6.png',
+                push: 'assets/sprites/player/2 Owlet_Monster/Owlet_Monster_Push_6.png',
+                walk_attack: 'assets/sprites/player/2 Owlet_Monster/Owlet_Monster_Walk+Attack_6.png',
+                dust: 'assets/sprites/player/2 Owlet_Monster/Walk_Run_Push_Dust_6.png',
                 hurt: 'assets/sprites/player/2 Owlet_Monster/Owlet_Monster_Hurt_4.png',
                 death: 'assets/sprites/player/2 Owlet_Monster/Owlet_Monster_Death_8.png'
             },
@@ -40,6 +46,9 @@ export class AssetLoader {
                 idle: 'assets/sprites/player/3 Dude_Monster/Dude_Monster_Idle_4.png',
                 walk: 'assets/sprites/player/3 Dude_Monster/Dude_Monster_Walk_6.png',
                 run: 'assets/sprites/player/3 Dude_Monster/Dude_Monster_Run_6.png',
+                push: 'assets/sprites/player/3 Dude_Monster/Dude_Monster_Push_6.png',
+                walk_attack: 'assets/sprites/player/3 Dude_Monster/Dude_Monster_Walk+Attack_6.png',
+                dust: 'assets/sprites/player/3 Dude_Monster/Walk_Run_Push_Dust_6.png',
                 hurt: 'assets/sprites/player/3 Dude_Monster/Dude_Monster_Hurt_4.png',
                 death: 'assets/sprites/player/3 Dude_Monster/Dude_Monster_Death_8.png'
             },
@@ -85,6 +94,16 @@ export class AssetLoader {
                     attack: 'assets/sprites/enemies/3 Dude_Monster/Dude_Monster_Attack1_4.png',
                     hurt: 'assets/sprites/enemies/3 Dude_Monster/Dude_Monster_Hurt_4.png',
                     death: 'assets/sprites/enemies/3 Dude_Monster/Dude_Monster_Death_8.png'
+                },
+
+                // Soldier enemy set (default enemy visuals) from Craftpix pack
+                soldier_1: {
+                    idle: 'assets/sprites/enemies/Soldier_1/Idle.png',
+                    walk: 'assets/sprites/enemies/Soldier_1/Walk.png',
+                    run: 'assets/sprites/enemies/Soldier_1/Run.png',
+                    attack: 'assets/sprites/enemies/Soldier_1/Shot_2.png',
+                    hurt: 'assets/sprites/enemies/Soldier_1/Hurt.png',
+                    death: 'assets/sprites/enemies/Soldier_1/Dead.png'
                 }
             },
 
