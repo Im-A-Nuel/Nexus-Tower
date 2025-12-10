@@ -1,80 +1,80 @@
-# Nexus Tower Defender - Gameplay Detail
+# Nexus Tower Defender - Detail Gameplay
 
-## Controls
-- Movement: `WASD`
-- Shoot: `Space` or mouse hold
+## Kontrol
+- Gerak: `WASD`
+- Tembak: `Spasi` atau tahan klik kiri
 - Dash: `F`
-- Toggle range overlay: `R`
+- Toggle overlay jarak tembak: `R`
 - Toggle aggro debug: `A`
 - Toggle grid: `G`
 - Pause: `Esc`
 
 ## Player
-- Base HP: 140 (max HP increases by +12 per level up; heals ~45% of new max when leveling).
-- Damage bonus: +2 per level up (applied to weapons).
-- Collision radius: 20 px.
-- Move speed: 220.
-- Dash: 0.15s, speed 800, cooldown 1.0s; spawns dash dust and grants fast movement (no invuln coded).
-- Level-up reset: restores position, keeps alive; nexus also levels separately.
+- HP dasar: 140 (max HP naik +12 tiap level up; heal ~45% dari max baru saat naik level).
++- Bonus damage: +2 tiap level up (teraplikasi ke semua senjata).
+- Radius tabrakan: 20 px.
+- Kecepatan gerak: 220.
+- Dash: durasi 0.15s, kecepatan 800, cooldown 1.0s; memunculkan debu dash (tanpa invuln).
+- Reset level-up: posisi di-reset, tetap hidup; Nexus level-up terpisah.
 
-### Weapons
-| Weapon | Damage | Fire Rate (s) | Range | Projectile Speed | Pellets | Spread |
+### Senjata
+| Senjata | Damage | Fire Rate (detik) | Range | Kecepatan Peluru | Pellets | Spread |
 | --- | --- | --- | --- | --- | --- | --- |
 | Rifle (default) | 24 | 0.22 | 220 | 560 | 1 | 0 |
 | Sniper | 80 | 1.0 | 420 | 620 | 1 | 0 |
-| Shotgun | 14 | 0.55 | 160 | 520 | 6 | 0.2 rad per pellet |
+| Shotgun | 14 | 0.55 | 160 | 520 | 6 | 0.2 rad/pellet |
 | SMG | 10 | 0.11 | 190 | 560 | 1 | 0.04 |
-- Damage scales with distance for sniper (factor 0.6–1.6).
-- Projectile lifetime clamps to range/speed; spread applied per pellet.
+- Damage sniper skala jarak (faktor 0.6–1.6).
+- Lifetime peluru disesuaikan range/speed; spread diterapkan per pellet.
 
-## Nexus (Player Base)
-- HP: 200 base; +45 max HP per nexus level-up (heals ~50% of new max).
-- Attack: damage 20, range 260, fire rate 1.2s, projectile speed 480.
-- Random combat tower sprite each session.
+## Nexus (Base Pemain)
+- HP: 200 dasar; +45 max HP tiap nexus level-up (heal ~50% dari max baru).
+- Serangan: damage 20, range 260, fire rate 1.2s, kecepatan peluru 480.
+- Sprite tower tempur dipilih acak tiap sesi.
 
-## Enemy Bases
-- Size: 80x80; attack range 280; fire rate 1.1s; projectile speed 380.
+## Base Musuh
+- Ukuran: 80x80; range serang 280; fire rate 1.1s; kecepatan peluru 380.
 - Damage: 10 + 1.2*(level-1).
 - HP: 220 + 55*(level-1).
-- Initial raiders queued: 1 + floor((level-1)/3).
-- Raider spawn interval: max(2.5s, 6 - 0.4*(level-1)).
-- Raider auto-queue: start timer max(5s, 12 - 0.8*(level-1)), interval max(4s, 10 - 0.7*(level-1)).
-- Aggro radius set by difficulty (see below).
+- Raider awal: 1 + floor((level-1)/3).
+- Interval spawn raider: max(2.5s, 6 - 0.4*(level-1)).
+- Auto-queue raider: timer awal max(5s, 12 - 0.8*(level-1)), interval max(4s, 10 - 0.7*(level-1)).
+- Aggro radius mengikuti mode difficulty.
 
-## NPC Guards (per base)
-- Base stats (before difficulty multipliers):
+## NPC Guard (per base)
+- Stat dasar (sebelum multiplier difficulty):
   - HP: 100 + 16*(level-1)
   - Damage: 8
-  - Speed: 96 + min(40, 4*(level-1))
+  - Kecepatan: 96 + min(40, 4*(level-1))
   - Range: 200; fire rate: 0.95s
-  - Sense radius (difficulty-based); leash 230; stop distance 150
-- States: GUARD → CHASE → RETURN (FSM).
-- Raider spawned from base uses CHASE with: sense radius 1200, leash 9999, stop distance 90, target = Nexus.
-- Death removal after animation and timer (3s).
+  - Sense radius: dari difficulty; leash 230; stop distance 150
+- FSM: GUARD → CHASE → RETURN.
+- Raider hasil spawn base: CHASE ke Nexus (sense 1200, leash 9999, stop 90).
+- Penghapusan setelah animasi mati + timer (3s).
 
-## Difficulty Multipliers (applied to NPC HP/Damage & aggro radius)
-| Mode | Bases min-max | Guards/base (start) | HP mult | DMG mult | Aggro radius |
+## Difficulty Multiplier (NPC HP/Damage & aggro)
+| Mode | Base min-maks | Guard/base (awal) | HP mult | DMG mult | Aggro radius |
 | --- | --- | --- | --- | --- | --- |
 | Easy | 1-2 | 1 | 0.65 | 0.65 | 150 |
 | Normal | 2-3 | 1 | 0.8 | 0.8 | 170 |
 | Hard | 2-3 | 2 | 0.95 | 0.95 | 190 |
 | Insane | 3-4 | 3 | 1.15 | 1.1 | 210 |
-- Guards per base increase by +floor((level-1)/3), capped at 4.
-- Bases per level: clamp(difficulty.min + floor((level-1)/2), min, max).
+- Guard per base bertambah +floor((level-1)/3), max 4.
+- Jumlah base per level: clamp(difficulty.min + floor((level-1)/2), min, max).
 
-## Projectiles & Collisions
-- Player/enemy projectiles are circle-tested; bases use rect tests.
-- Projectile hits resolve in order: player shots -> NPC first -> base; enemy shots -> player first -> nexus.
-- Particle effects spawn on hits; damage numbers (red) float upward on every hit (player or enemy).
+## Proyektil & Tabrakan
+- Peluru diuji lingkaran; base diuji kotak.
+- Urutan hit: peluru pemain -> NPC dulu -> base; peluru musuh -> player dulu -> Nexus.
+- Efek partikel pada hit; angka damage merah mengapung pada setiap hit.
 
 ## Range & UI
-- Range overlays: player weapon and nexus attack range (toggle `R`).
-- Aggro debug (enemy base) toggle: `A`.
-- Crosshair always visible.
-- Damage text: red, outlined; floats above target.
+- Overlay jarak: senjata player dan serangan Nexus (toggle `R`).
+- Aggro debug base musuh: toggle `A`.
+- Crosshair selalu tampil.
+- Tulisan damage: merah, ada outline, muncul di atas target.
 
-## Level Flow
-- Start at level 1; bases and guards generated per difficulty.
-- Win level when all bases destroyed → Level Up screen; stats scale as above.
-- Lose when player HP <=0 or Nexus HP <=0.
-- Progress persisted (difficulty, weapon, level) via localStorage.
+## Alur Level
+- Mulai level 1; base dan guard digenerate sesuai difficulty.
+- Menang level: semua base hancur → layar Level Up; stat scale seperti di atas.
+- Kalah: HP player <=0 atau Nexus <=0.
+- Progress (difficulty, senjata, level) disimpan via localStorage.
