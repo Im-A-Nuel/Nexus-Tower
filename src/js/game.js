@@ -461,7 +461,7 @@ export class Game {
         this.player.update(dt, this.input, this.canvas);
 
         // Handle player dash
-        if (this.input.isKeyPressed('f')) {
+        if (this.input.isKeyPressed('shift')) {
             const mouse = this.input.getMousePosition();
             this.player.dash(mouse.x, mouse.y);
         }

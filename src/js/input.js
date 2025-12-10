@@ -15,6 +15,7 @@ export class InputManager {
             d: false,
             space: false,
             f: false,
+            shift: false,
             escape: false,
             g: false, // Debug grid toggle
             r: false, // Range overlay toggle
@@ -71,6 +72,7 @@ export class InputManager {
             case 'd': this.keys.d = true; break;
             case ' ': this.keys.space = true; break;
             case 'f': this.keys.f = true; break;
+            case 'shift': this.keys.shift = true; break;
             case 'escape': this.keys.escape = true; break;
             case 'g': this.keys.g = true; break;
             case 'r': this.keys.r = true; break;
@@ -91,6 +93,7 @@ export class InputManager {
             case 'd': this.keys.d = false; break;
             case ' ': this.keys.space = false; break;
             case 'f': this.keys.f = false; break;
+            case 'shift': this.keys.shift = false; break;
             case 'escape': this.keys.escape = false; break;
             case 'g': this.keys.g = false; break;
             case 'r': this.keys.r = false; break;
